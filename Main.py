@@ -73,8 +73,17 @@ class Ball:
         Returns:
             Возвращает True в случае столкновения мяча и цели. В противном случае возвращает False.
         """
-        if ((self.x - obj.x) ** 2) + ((self.y - obj.y) ** 2) < (self.r + obj.r) ** 2:
-            return True
+        if isinstance(obj, Targets):
+            points = 0
+            for target in obj.t_list:
+                if ((self.x - target.x) ** 2 + (self.y - target.y) ** 2 <=
+                            (self.r + target.r) ** 2) and target.live:
+                    target.hit()
+                    points += 1
+            obj.hit(points)
+            return points
+        else:
+            return False
 
     def delete(self):
         canv.delete(self.id)
@@ -130,7 +139,7 @@ class Gun:
             canv.itemconfig(self.id, fill='black')
 
 
-class target:
+class Target:
     def __init__(self):
         self.x = 0
         self.y = 0
@@ -138,11 +147,10 @@ class target:
 
         self.color = 'red'
 
-        self.points = 0
         self.live = 1
 
         self.id = canv.create_oval(0, 0, 0, 0)
-        self.id_points = canv.create_text(30, 30, text=self.points, font='28')
+
         self.new_target()
 
     def new_target(self):
@@ -150,33 +158,58 @@ class target:
         self.x = rnd(600, 780)
         self.y = rnd(300, 550)
         self.r = rnd(2, 50)
+        self.live = 1
         canv.coords(self.id, self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
         canv.itemconfig(self.id, fill=self.color)
 
-    def hit(self, points=1):
+    def hit(self):
         """Попадание шарика в цель."""
         canv.coords(self.id, -10, -10, -10, -10)
+        self.live = 0
+
+
+class Targets:
+    def __init__(self, *args):
+        self.t_list = list(args)
+        self.points = 0
+        self.id_points = canv.create_text(30, 30, text=self.points,
+                                            font='28')
+
+    def add(self, *args):
+        self.t_list.append(*args)
+        return True
+
+    def alive(self):
+        flag = False
+        for t in self.t_list:
+            if t.live:
+                flag = True
+        return flag
+
+    def hit(self, points=1):
         self.points += points
         canv.itemconfig(self.id_points, text=self.points)
 
+    def renew(self):
+        for t in self.t_list:
+            t.new_target()
+
 
 def new_game(event=''):
-    global gun, t1, screen1, balls, bullet
-    t1.new_target()
+    global gun, targets, screen1, balls, bullet
+    targets.renew()
     bullet = 0
     balls = []
     canv.bind('<Button-1>', g1.fire2_start)
     canv.bind('<ButtonRelease-1>', g1.fire2_end)
     canv.bind('<Motion>', g1.targetting)
 
-    t1.live = 1
-    while t1.live or balls:
+    while targets.alive or balls:
         for b in balls:
             if b.move():
                 balls.remove(b)
-            if b.hittest(t1) and t1.live:
-                t1.live = 0
-                t1.hit()
+            b.hittest(targets)
+            if not targets.alive:
                 canv.bind('<Button-1>', '')
                 canv.bind('<ButtonRelease-1>', '')
                 canv.itemconfig(screen1, text='Вы уничтожили цель за ' + str(bullet) + ' выстрелов')
@@ -196,7 +229,8 @@ root.geometry('800x600')
 canv = tk.Canvas(root, bg='white')
 canv.pack(fill=tk.BOTH, expand=1)
 
-t1 = target()
+targets = Targets(Target(), Target())
+
 screen1 = canv.create_text(400, 300, text='', font='28')
 g1 = Gun()
 bullet = 0
