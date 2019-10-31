@@ -61,7 +61,9 @@ class Ball:
         self.set_coords()
 
         if self.live <= 0:
-            self.delete()
+            return self.delete()
+        else:
+            return False
 
     def hittest(self, obj):
         """Функция проверяет сталкивалкивается ли данный обьект с целью, описываемой в обьекте obj.
@@ -71,11 +73,12 @@ class Ball:
         Returns:
             Возвращает True в случае столкновения мяча и цели. В противном случае возвращает False.
         """
-        if ((self.x - t1.x) ** 2) + ((self.y - t1.y) ** 2) < (self.r + t1.r) ** 2:
+        if ((self.x - obj.x) ** 2) + ((self.y - obj.y) ** 2) < (self.r + obj.r) ** 2:
             return True
 
     def delete(self):
         canv.delete(self.id)
+        return True
 
 
 class Gun:
@@ -169,7 +172,8 @@ def new_game(event=''):
     t1.live = 1
     while t1.live or balls:
         for b in balls:
-            b.move()
+            if b.move():
+                balls.remove(b)
             if b.hittest(t1) and t1.live:
                 t1.live = 0
                 t1.hit()
@@ -181,7 +185,7 @@ def new_game(event=''):
         g1.targetting()
         g1.power_up()
     canv.itemconfig(screen1, text='')
-    canv.delete(gun)
+    canv.delete(g1)
     root.after(750, new_game)
 
 
