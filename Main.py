@@ -17,7 +17,7 @@ class Ball:
         self.r = 10
         self.vx = 0
         self.vy = 0
-        self.color = choice(['blue', 'green', 'red', 'brown'])
+        self.color = choice(['blue', 'green', 'yellow', 'brown'])
         self.id = canv.create_oval(
             self.x - self.r,
             self.y - self.r,
@@ -36,17 +36,15 @@ class Ball:
             self.y + self.r
         )
 
-    def move(self):
+    def move(self, g=1):
         """Переместить мяч по прошествии единицы времени.
 
         Метод описывает перемещение мяча за один кадр перерисовки. То есть, обновляет значения
         self.x и self.y с учетом скоростей self.vx и self.vy, силы гравитации, действующей на мяч,
         и стен по краям окна (размер окна 800х600).
         """
-        g = 1
-
         self.live -= 1
-        
+
         if self.x + self.r >= 800:
             self.vx = -0.7 * abs(self.vx)
         elif self.x - self.r <= 0:
@@ -75,10 +73,9 @@ class Ball:
         """
         if isinstance(obj, Targets):
             points = 0
-            for target in obj.t_list:
-                if ((self.x - target.x) ** 2 + (self.y - target.y) ** 2 <=
-                            (self.r + target.r) ** 2) and target.live:
-                    target.hit()
+            for t in obj.t_list:
+                if ((self.x - t.x) ** 2 + (self.y - t.y) ** 2 <= (self.r + t.r) ** 2) and t.live:
+                    t.hit()
                     points += 1
             obj.hit(points)
             return points
@@ -153,11 +150,16 @@ class Target:
 
         self.new_target()
 
+        self.vx = 0
+        self.vy = 0
+
     def new_target(self):
         """ Инициализация новой цели. """
         self.x = rnd(600, 780)
         self.y = rnd(300, 550)
         self.r = rnd(2, 50)
+        self.vx = rnd(-3, 3)
+        self.vy = rnd(-3, 3)
         self.live = 1
         canv.coords(self.id, self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
         canv.itemconfig(self.id, fill=self.color)
@@ -167,13 +169,36 @@ class Target:
         canv.coords(self.id, -10, -10, -10, -10)
         self.live = 0
 
+    def move_t(self):
+        if self.live:
+            if 200 <= self.x <= 750:
+                pass
+            elif self.x >= 750:
+                self.vx = -abs(self.vx)
+            elif self.x <= 200:
+                self.vx = abs(self.vx)
+
+            if 50 <= self.y <= 550:
+                pass
+            elif self.y >= 550:
+                self.vy = -abs(self.vy)
+            elif self.y <= 50:
+                self.vy = abs(self.vy)
+
+            self.x += self.vx
+            self.y += self.vy
+
+            canv.coords(self.id, self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
+        else:
+            canv.coords(self.id, -10, -10, -10, -10)
+
 
 class Targets:
     def __init__(self, *args):
         self.t_list = list(args)
         self.points = 0
         self.id_points = canv.create_text(30, 30, text=self.points,
-                                            font='28')
+                                          font='28')
 
     def add(self, *args):
         self.t_list.append(*args)
@@ -196,29 +221,29 @@ class Targets:
 
 
 def new_game(event=''):
-    global gun, targets, screen1, balls, bullet
+    global gun, targets, screen1, balls, bullet, t1, t2
     targets.renew()
-    bullet = 0
     balls = []
     canv.bind('<Button-1>', g1.fire2_start)
     canv.bind('<ButtonRelease-1>', g1.fire2_end)
     canv.bind('<Motion>', g1.targetting)
 
-    while targets.alive or balls:
+    while targets.alive() or balls:
+        t1.move_t()
+        t2.move_t()
         for b in balls:
             if b.move():
                 balls.remove(b)
             b.hittest(targets)
-            if not targets.alive:
+            if not targets.alive():
                 canv.bind('<Button-1>', '')
                 canv.bind('<ButtonRelease-1>', '')
-                canv.itemconfig(screen1, text='Вы уничтожили цель за ' + str(bullet) + ' выстрелов')
+                canv.itemconfig(screen1, text='Вы уничтожили все цели за ' + str(bullet) + ' выстрелов')
         canv.update()
         time.sleep(0.03)
         g1.targetting()
         g1.power_up()
     canv.itemconfig(screen1, text='')
-    canv.delete(g1)
     root.after(750, new_game)
 
 
@@ -229,7 +254,9 @@ root.geometry('800x600')
 canv = tk.Canvas(root, bg='white')
 canv.pack(fill=tk.BOTH, expand=1)
 
-targets = Targets(Target(), Target())
+t1 = Target()
+t2 = Target()
+targets = Targets(t1, t2)
 
 screen1 = canv.create_text(400, 300, text='', font='28')
 g1 = Gun()
