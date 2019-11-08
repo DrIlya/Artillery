@@ -1,23 +1,23 @@
 from random import choice
-import module_root as m_r
 import module_targets as m_t
 
 
 class Ball:
-    def __init__(self, x=40, y=450):
+    def __init__(self, canvas, x=40, y=450):
         """ Конструктор класса ball
 
         Args:
         x - начальное положение мяча по горизонтали
         y - начальное положение мяча по вертикали
         """
+        self.canvas = canvas
         self.x = x
         self.y = y
         self.r = 10
         self.vx = 0
         self.vy = 0
         self.color = choice(['blue', 'green', 'yellow', 'brown'])
-        self.id = m_r.canv.create_oval(
+        self.id = self.canvas.create_oval(
             self.x - self.r,
             self.y - self.r,
             self.x + self.r,
@@ -27,7 +27,7 @@ class Ball:
         self.live = 150
 
     def set_coords(self):
-        m_r.canv.coords(
+        self.canvas.coords(
             self.id,
             self.x - self.r,
             self.y - self.r,
@@ -84,5 +84,5 @@ class Ball:
             return False
 
     def delete(self):
-        m_r.canv.delete(self.id)
+        self.canvas.delete(self.id)
         return True

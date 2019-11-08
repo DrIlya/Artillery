@@ -1,18 +1,18 @@
 from random import randrange as rnd
-import module_root as m_r
 
 
 class Target:
-    def __init__(self):
+    def __init__(self, canvas):
         self.x = 0
         self.y = 0
         self.r = 0
+        self.canvas = canvas
 
         self.color = 'red'
 
         self.live = 1
 
-        self.id = m_r.canv.create_oval(0, 0, 0, 0)
+        self.id = self.canvas.create_oval(0, 0, 0, 0)
 
         self.new_target()
 
@@ -27,12 +27,12 @@ class Target:
         self.vx = rnd(-3, 3)
         self.vy = rnd(-3, 3)
         self.live = 1
-        m_r.canv.coords(self.id, self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
-        m_r.canv.itemconfig(self.id, fill=self.color)
+        self.canvas.coords(self.id, self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
+        self.canvas.itemconfig(self.id, fill=self.color)
 
     def hit(self):
         """Попадание шарика в цель."""
-        m_r.canv.coords(self.id, -10, -10, -10, -10)
+        self.canvas.coords(self.id, -10, -10, -10, -10)
         self.live = 0
 
     def move_t(self):
@@ -54,16 +54,17 @@ class Target:
             self.x += self.vx
             self.y += self.vy
 
-            m_r.canv.coords(self.id, self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
+            self.canvas.coords(self.id, self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
         else:
-            m_r.canv.coords(self.id, -10, -10, -10, -10)
+            self.canvas.coords(self.id, -10, -10, -10, -10)
 
 
 class Targets:
-    def __init__(self, *args):
+    def __init__(self, canvas, *args):
         self.t_list = list(args)
         self.points = 0
-        self.id_points = m_r.canv.create_text(30, 30, text=self.points,
+        self.canvas = canvas
+        self.id_points = self.canvas.create_text(30, 30, text=self.points,
                                           font='28')
 
     def add(self, *args):
@@ -79,7 +80,7 @@ class Targets:
 
     def hit(self, points=1):
         self.points += points
-        m_r.canv.itemconfig(self.id_points, text=self.points)
+        self.canvas.itemconfig(self.id_points, text=self.points)
 
     def renew(self):
         for t in self.t_list:
