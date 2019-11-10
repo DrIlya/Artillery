@@ -2,13 +2,14 @@ from random import randrange as rnd
 
 
 class Target:
-    def __init__(self, canvas):
+    def __init__(self, canvas, target_color='red', speed_factor=2):
         self.x = 0
         self.y = 0
         self.r = 0
         self.canvas = canvas
 
-        self.color = 'red'
+        self.color = target_color
+        self.speed_F = speed_factor
 
         self.live = 1
 
@@ -20,12 +21,12 @@ class Target:
         self.vy = 0
 
     def new_target(self):
-        """ Инициализация новой цели. """
+        """ Инициализация новой цели."""
         self.x = rnd(600, 780)
         self.y = rnd(300, 550)
         self.r = rnd(2, 50)
-        self.vx = rnd(-3, 3)
-        self.vy = rnd(-3, 3)
+        self.vx = rnd(-3, 3) * self.speed_F
+        self.vy = rnd(-3, 3) * self.speed_F
         self.live = 1
         self.canvas.coords(self.id, self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
         self.canvas.itemconfig(self.id, fill=self.color)
@@ -36,6 +37,7 @@ class Target:
         self.live = 0
 
     def move_t(self):
+        """Движение цели."""
         if self.live:
             if 200 <= self.x <= 750:
                 pass
@@ -65,7 +67,7 @@ class Targets:
         self.points = 0
         self.canvas = canvas
         self.id_points = self.canvas.create_text(30, 30, text=self.points,
-                                          font='28')
+                                                 font='28')
 
     def add(self, *args):
         self.t_list.append(*args)

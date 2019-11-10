@@ -4,15 +4,22 @@ import module_gun as m_g
 
 
 class Basis:
-    def __init__(self, place):
+    def __init__(self, place, target_color='red', speed_factor=2, x=40, y=450, g=1, ball_live=150):
         self.place = place
         self.root = place.root
         self.canvas = place.canv
 
-        self.t1 = m_t.Target(self.canvas)
-        self.t2 = m_t.Target(self.canvas)
+        self.target_color = target_color
+        self.speed_factor = speed_factor
+        self.x = x
+        self.y = y
+        self.g = g
+        self.ball_live = ball_live
+
+        self.t1 = m_t.Target(self.canvas, self.target_color, self.speed_factor)
+        self.t2 = m_t.Target(self.canvas, self.target_color, self.speed_factor)
         self.targets = m_t.Targets(self.canvas, self.t1, self.t2)
-        self.g1 = m_g.Gun(self.canvas)
+        self.g1 = m_g.Gun(self.canvas, self.x, self.y, self.g, self.ball_live)
 
         self.screen1 = self.canvas.create_text(400, 300, text='', font='28')
 
